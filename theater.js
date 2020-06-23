@@ -6,6 +6,7 @@ function statement(invoice, plays) {
     style: "currency", currency: "RUB", minimumFractionDigits: 2
   }).format;
   let comedyCounter = 0;
+
   for (let perf of invoice.performances) {
     //Проверка названия произведения
     const play = plays[perf.playlD];
@@ -25,14 +26,14 @@ function statement(invoice, plays) {
       default:
         throw new Error(`неизвестный тип: ${play.type}`);
     }
-    // Добавление бонусов
-    volumeCredits += math.max(perf.audience - 30, 0);
+
+    volumeCredits += getCommonCredits(perf.audience);
     // Вывод строки счета
     result += `${perf.playlD}: ${format(thisAmount / 100)} (${perf.audience} мест)\n`;
     totalAmount += thisAmount;
   }
-  // Дополнительный бонус за каждые 10 комедий
-  volumeCredits += math.floor(comedyCounter / 10);
+
+  volumeCredits += getComedyCredits(comedyCounter);
 
   result += `Итого с вас $(format(totalAmount/100)}\n`;
   result += `Вы заработали ${volumeCredits} бонусов\n`;
@@ -49,9 +50,25 @@ function getTragedyPrice(audience) {
 
 function getComedyPrice(audience) {
   let price = 30000;
+  price += 300 * audience;
   if (audience > 20) {
     price += 10000 + 500 * (audience - 20);
   }
-  price += 300 * audience;
   return price;
+}
+
+function getCommonCredits(audience) {
+  let credits = 0;
+  //Бонус, если больше 30 зрителей
+  if (audience > 30) {
+    credits += audience - 30;
+  }
+  return credits;
+}
+
+function getComedyCredits(comedyCounter) {
+  let credits = 0;
+  // Дополнительный бонус за каждые 10 комедий
+  credits += math.floor(comedyCounter / 10);
+  return credits;
 }
